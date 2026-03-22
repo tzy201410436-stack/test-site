@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>INFP恋爱依恋测评</title>
+<style>
+
+body{
+font-family: -apple-system, BlinkMacSystemFont;
+background:#f7f7fb;
+margin:0;
+padding:20px;
+color:#333;
+}
+
+.container{
+max-width:750px;
+margin:auto;
+}
+
+.card{
+background:#fff;
+padding:20px;
+border-radius:16px;
+margin-bottom:20px;
+box-shadow:0 8px 20px rgba(0,0,0,0.05);
+}
+
+h1{
+text-align:center;
+}
+
+button{
+width:100%;
+padding:15px;
+border:none;
+border-radius:12px;
+background:#6c63ff;
+color:#fff;
+font-size:16px;
+}
+
+.progress{
+height:8px;
+background:#eee;
+border-radius:10px;
+margin-bottom:20px;
+}
+
+.progress-bar{
+height:8px;
+background:#6c63ff;
+width:0%;
+border-radius:10px;
+}
+
+.option{
+padding:12px;
+margin-top:10px;
+border-radius:10px;
+border:1px solid #eee;
+cursor:pointer;
+}
+
+.option:hover
+
+.result{
+white-space:pre-line;
+line-height:1.7;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>INFP恋爱依恋测评</h1>
+
+<div id="verify" class="card">
+<h3>请输入验证码</h3>
+<input id="code" placeholder="输入 6688" style="width:100%;padding:10px;margin-bottom:10px;">
+<button onclick="check()">进入测评</button>
+<p id="err" style="color:red;"></p>
+</div>
+
+<div id="app" style="display:none">
+
+<div class="progress">
+<div class="progress-bar" id="bar"></div>
+</div>
+
+<div id="questionBox" class="card"></div>
+
+<button onclick="next()">下一题</button>
+
+</div>
+
+<div id="result" class="card" style="display:none"></div>
+
+</div>
+
+<script>
+
+let index=0;
+let answers=[];
+
+function check(){
+    if(document.getElementById("code").value==="6688"){
+        document.getElementById("verify").style.display="none";
+        document.getElementById("app").style.display="block";
+        render();
+    }else{
+        document.getElementById("err").innerText="验证码错误";
+    }
+}
+
+const questions = [
+"喜欢上一个人后，你会特别在意对方回消息的速度吗？",
+"对方稍微冷淡一点，你会怀疑他不爱了吗？",
+"你在感情里更容易？",
+"被忽略时第一反应？",
+"进入关系后会更敏感吗？",
+"害怕对方失去新鲜感吗？",
+"对方对你好会受宠若惊吗？",
+"吵架时你更倾向？",
+"你最深的恐惧？",
+"是否经常委屈自己？",
+"会反复看对方动态吗？",
+"害怕暴露脆弱吗？",
+"不回消息会脑补吗？",
+"你更像？",
+"会小心翼翼吗？",
+"害怕太亲密吗？",
+"容易内耗吗？",
+"你最渴望？",
+"会故意不主动吗？",
+"最缺什么？",
+"语气差会受伤吗？",
+"会失去自我吗？",
+"相信自己值得被爱吗？",
+"喜欢一个人会？",
+"怕暴露缺点吗？",
+"不能接受什么？",
+"会因怕结束不敢开始吗？",
+"最需要什么？",
+"容易爱上冷淡的人吗？",
+"最想变成？"
+];
+
+const options = ["A","R","F","S"];
+
+function render(){
+    let q=questions[index];
+    let html=`<h3>${index+1}/30</h3><p>${q}</p>`;
+    options.forEach(o=>{
+        html+=`<div class="option" onclick="select('${o}')">${o}</div>`;
+    });
+    document.getElementById("questionBox").innerHTML=html;
+    document.getElementById("bar").style.width=((index/30)*100)+"%";
+}
+
+function select(val){
+    answers[index]=val;
+}
+
+function next(){
+    if(!answers[index]){
+        alert("请选择答案");
+        return;
+    }
+    index++;
+    if(index<30){
+        render();
+    }else{
+        showResult();
+    }
+}
+
+function showResult(){
+
+let score={A:0,R:0,F:0,S:0};
+answers.forEach(a=>score[a]++);
+
+let type=Object.keys(score).reduce((a,b)=>score[a]>score[b]?a:b);
+
+let resultText={
+"A":"【焦虑依恋型】\n\n你极度渴望爱，同时极度害怕失去。\n你会过度在意细节、容易内耗、习惯讨好。\n\n核心问题：缺乏安全感\n建议：停止讨好，建立自我价值",
+"R":"【回避依恋型】\n\n你渴望爱，但更害怕受伤。\n你会下意识拉开距离、忽冷忽热。\n\n核心问题：恐惧亲密\n建议：学会逐步表达情感",
+"F":"【温柔安全型】\n\n你温柔、稳定、有边界。\n你既能爱别人，也能爱自己。\n\n建议：多表达需求，让关系更深",
+"S":"【稳定治愈型】\n\n你已达到理想状态。\n内心稳定，情绪成熟。\n\n你是关系中的“治愈者”"
+};
+
+document.getElementById("app").style.display="none";
+document.getElementById("result").style.display="block";
+document.getElementById("result").innerHTML=
+`<h2>你的测评结果</h2>
+<p>焦虑型：${score.A} | 回避型：${score.R} | 温柔型：${score.F} | 稳定型：${score.S}</p>
+<div class="result">${resultText[type]}</div>`;
+}
+
+</script>
+
+</body>
+</html>
