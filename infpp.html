@@ -1,410 +1,456 @@
-import React, { useState, useEffect } from 'react';
-import { Heart, Sparkles, Wind, ShieldCheck, ArrowRight, RotateCcw, CheckCircle2, AlertCircle, Fingerprint, Lock } from 'lucide-react';
-
-// --- Data Preparation ---
-
-// Helper to remove quotes and use spaces for emphasis based on user preference
-const formatText = (text) => {
-  return text.replace(/[“”]/g, ' ');
-};
-
-const questions = [
-  { id: 1, text: "喜欢上一个人后,你会特别在意对方回消息的速度吗?", options: [{ label: "A", text: "非常在意,回慢了会不安" }, { label: "R", text: "偶尔会,但尽量不表现" }, { label: "F", text: "会,但不会追问" }, { label: "S", text: "不太在意,信任对方" }] },
-  { id: 2, text: "对方稍微冷淡一点,你就会开始想:他是不是不爱我了?", options: [{ label: "A", text: "经常这样,瞬间焦虑" }, { label: "R", text: "会默默猜测,但不直说" }, { label: "F", text: "会有点失落,但能自我安抚" }, { label: "S", text: "很少,相信只是暂时忙" }] },
-  { id: 3, text: "你在感情里更容易?", options: [{ label: "A", text: "过度付出、讨好、怕失去" }, { label: "R", text: "想靠近又想推开、忽冷忽热" }, { label: "F", text: "默默等待、温柔包容" }, { label: "S", text: "稳定安心、不粘人也不疏离" }] },
-  { id: 4, text: "被喜欢的人忽略时,你第一反应是?", options: [{ label: "A", text: "自我否定、是不是我不够好" }, { label: "R", text: "假装无所谓、偷偷难过" }, { label: "F", text: "安静等待、不闹不逼" }, { label: "S", text: "直接沟通、不内耗" }] },
-  { id: 5, text: "进入亲密关系后,你会变得比平时更敏感脆弱吗?", options: [{ label: "A", text: "非常明显,完全变个人" }, { label: "R", text: "会,但会刻意克制" }, { label: "F", text: "会一点,但依然温柔" }, { label: "S", text: "不会,反而更放松" }] },
-  { id: 6, text: "你害怕对方对你失去新鲜感吗?", options: [{ label: "A", text: "极度害怕,一直不安" }, { label: "R", text: "有点怕,所以保持距离" }, { label: "F", text: "有点怕,但相信真心" }, { label: "S", text: "不怕,信任彼此的感情" }] },
-  { id: 7, text: "对方对你好,你会受宠若惊,甚至想加倍偿还吗?", options: [{ label: "A", text: "经常这样,怕配不上" }, { label: "R", text: "会,但不敢完全接受" }, { label: "F", text: "会温柔回应" }, { label: "S", text: "坦然接受,也会回馈" }] },
-  { id: 8, text: "吵架或冷战时,你最容易?", options: [{ label: "A", text: "主动妥协、道歉、求和" }, { label: "R", text: "嘴硬心软、假装不在乎" }, { label: "F", text: "默默难过、等待缓和" }, { label: "S", text: "冷静沟通、解决问题" }] },
-  { id: 9, text: "你内心深处最恐惧的是?", options: [{ label: "A", text: "被抛弃、不被爱" }, { label: "R", text: "被束缚、失去自我" }, { label: "F", text: "不被理解、不懂我" }, { label: "S", text: "没有特别恐惧的" }] },
-  { id: 10, text: "你在感情里是不是经常委屈自己、迁就对方?", options: [{ label: "A", text: "经常,习惯讨好" }, { label: "R", text: "偶尔,但会很快抽离" }, { label: "F", text: "会包容,但有底线" }, { label: "S", text: "平等相处,不委屈自己" }] },
-  { id: 11, text: "喜欢一个人,你会忍不住反复翻看对方的动态吗?", options: [{ label: "A", text: "控制不住地看" }, { label: "R", text: "偶尔看,但不表现" }, { label: "F", text: "悄悄关注" }, { label: "S", text: "很少,信任为主" }] },
-  { id: 12, text: "你害怕对方看到你真实的脆弱和负面情绪吗?", options: [{ label: "A", text: "非常怕,只敢展示好的一面" }, { label: "R", text: "有点怕,所以保持距离" }, { label: "F", text: "有点怕,但慢慢会敞开" }, { label: "S", text: "不怕,愿意真实相处" }] },
-  { id: 13, text: "对方不回消息,你会脑补很多负面剧情吗?", options: [{ label: "A", text: "经常,越想越难过" }, { label: "R", text: "会,但很快告诉自己别想" }, { label: "F", text: "会有点失落,但不乱猜" }, { label: "S", text: "不会,相信对方" }] },
-  { id: 14, text: "你在感情里更像是?", options: [{ label: "A", text: "粘人、需要安全感的一方" }, { label: "R", text: "独立、忽冷忽热的一方" }, { label: "F", text: "温柔、包容、陪伴的一方" }, { label: "S", text: "稳定、成熟、安心的一方" }] },
-  { id: 15, text: "你会因为太在乎,而变得小心翼翼吗?", options: [{ label: "A", text: "一直小心翼翼" }, { label: "R", text: "会,但会假装洒脱" }, { label: "F", text: "会温柔,但不卑微" }, { label: "S", text: "自然放松,不刻意" }] },
-  { id: 16, text: "你害怕进入太亲密、没有私人空间的关系吗?", options: [{ label: "A", text: "不怕,只想被抱紧" }, { label: "R", text: "非常怕,一亲密就想逃" }, { label: "F", text: "不怕,但需要一点空间" }, { label: "S", text: "不怕,亲密和空间都能平衡" }] },
-  { id: 17, text: "你很容易在感情里自我感动、自我内耗吗?", options: [{ label: "A", text: "经常内耗到失眠" }, { label: "R", text: "会内耗,但很快抽离" }, { label: "F", text: "偶尔内耗,能自我调节" }, { label: "S", text: "几乎不内耗" }] },
-  { id: 18, text: "你渴望的是?", options: [{ label: "A", text: "绝对偏爱、时刻被在乎" }, { label: "R", text: "灵魂契合、互不束缚" }, { label: "F", text: "深度理解、长久陪伴" }, { label: "S", text: "轻松舒服、稳定安心" }] },
-  { id: 19, text: "你会不会明明很想对方,却故意不主动?", options: [{ label: "A", text: "不会,很想就会找" }, { label: "R", text: "经常,嘴硬心软" }, { label: "F", text: "偶尔,怕打扰对方" }, { label: "S", text: "想就会自然表达" }] },
-  { id: 20, text: "你在感情里最缺的是?", options: [{ label: "A", text: "安全感、确定性" }, { label: "R", text: "自由、自我空间" }, { label: "F", text: "理解、共情" }, { label: "S", text: "什么都不缺,内心稳定" }] },
-  { id: 21, text: "对方稍微凶一点、语气差一点,你会瞬间受伤吗?", options: [{ label: "A", text: "非常受伤,会记很久" }, { label: "R", text: "表面没事,心里难过" }, { label: "F", text: "会难过,但会说出来" }, { label: "S", text: "会沟通,不轻易受伤" }] },
-  { id: 22, text: "你容易在感情里失去自我、围着对方转吗?", options: [{ label: "A", text: "完全会,失去自己" }, { label: "R", text: "不会,很怕失去自我" }, { label: "F", text: "会投入,但保留自己" }, { label: "S", text: "不会,保持独立" }] },
-  { id: 23, text: "你相信自己值得被坚定选择吗?", options: [{ label: "A", text: "不太相信,总怕被代替" }, { label: "R", text: "半信半疑,所以保持距离" }, { label: "F", text: "相信,慢慢被治愈" }, { label: "S", text: "完全相信,值得被爱" }] },
-  { id: 24, text: "你喜欢一个人,更倾向于?", options: [{ label: "A", text: "全心全意付出" }, { label: "R", text: "默默关注,不轻易靠近" }, { label: "F", text: "温柔陪伴,细水长流" }, { label: "S", text: "自然相处,轻松舒服" }] },
-  { id: 25, text: "你害怕对方发现你的缺点后不喜欢你吗?", options: [{ label: "A", text: "极度害怕,一直伪装" }, { label: "R", text: "有点怕,所以保持距离" }, { label: "F", text: "有点怕,但愿意慢慢暴露" }, { label: "S", text: "不怕,接受真实的我才是爱" }] },
-  { id: 26, text: "感情里你最不能接受的是?", options: [{ label: "A", text: "冷暴力、忽冷忽热" }, { label: "R", text: "控制欲强、管太多" }, { label: "F", text: "不理解、不同频" }, { label: "S", text: "背叛、不真诚" }] },
-  { id: 27, text: "你会因为害怕结束,而不敢开始一段感情吗?", options: [{ label: "A", text: "不会,太渴望被爱" }, { label: "R", text: "经常,怕受伤所以逃避" }, { label: "F", text: "偶尔,会犹豫很久" }, { label: "S", text: "不会,愿意认真体验" }] },
-  { id: 28, text: "你在感情里最需要的是?", options: [{ label: "A", text: "时刻回应、安全感" }, { label: "R", text: "空间自由、不被束缚" }, { label: "F", text: "深度共情、被理解" }, { label: "S", text: "稳定平等、互相尊重" }] },
-  { id: 29, text: "你是不是容易爱上不主动、冷淡的人?", options: [{ label: "A", text: "经常,越冷淡越上头" }, { label: "R", text: "会被吸引,但会逃离" }, { label: "F", text: "会心疼,但更偏爱温柔" }, { label: "S", text: "不会,只喜欢温柔主动的" }] },
-  { id: 30, text: "如果可以,你最想在感情里变成?", options: [{ label: "A", text: "不再害怕被丢下" }, { label: "R", text: "敢爱又不怕亲密" }, { label: "F", text: "一直温柔不受伤" }, { label: "S", text: "永远安心不内耗" }] }
-];
-
-const resultDetails = {
-  A: {
-    type: "A",
-    title: "焦虑依恋型",
-    icon: <Heart className="w-8 h-8 text-rose-500" />,
-    color: "bg-rose-50 text-rose-600 border-rose-200",
-    bgGradient: "from-rose-50 to-orange-50",
-    description: formatText("你在感情里是典型的焦虑依恋型，这也是INFP 高敏感特质在亲密关系中最直接的体现，你的恋爱核心底色始终是：我不够好，我怕被丢下，所以我要拼命讨好、付出、抓住你，用所有的温柔和迁就，换对方不离开的承诺。"),
-    traits: [
-      formatText("极度敏感缺爱，情绪完全被对方牵引：你对感情里的 负面信号 感知力极强，对方的一点点疏忽都会被你无限放大。"),
-      formatText("习惯性讨好付出，在感情里不断失去自我：为了留住对方的爱意，你会不自觉的迁就对方的所有要求。"),
-      formatText("过度粘人依赖，需要时刻确认对方的爱意：甚至会通过 闹小脾气   提分手 等极端方式试探对方的心意。"),
-      formatText("越爱越卑微，越在乎越容易陷入自我否定：哪怕对方做出了伤害你的事，你也会先从自己身上找原因。"),
-      formatText("容易陷入执念式恋爱，对冷淡的人越陷越深：对方越对你冷淡，你越觉得 我再努力一点就能捂热他的心 。")
-    ],
-    rootCause: formatText("你的焦虑依恋，从来都不是 性格矫情 或 爱得太深 ，而是INFP天生的高敏感特质，叠加原生家庭的情感忽视。小时候大概率很少被无条件接纳，形成了 我必须足够优秀，才值得被爱 的核心认知。如果过往受过伤，你会下意识的用过度的付出和粘人，来填补内心的安全感缺口。"),
-    idealPartner: "情绪稳定、主动温柔、有耐心、懂包容的治愈型爱人。他能接住你的所有焦虑和不安，不会因为你的粘人而烦躁，不会用冷暴力消耗你的真心。他的爱意是稳定的、持续的、看得见的。",
-    advice: formatText("真正的爱从来都不是靠讨好和迁就换来的。请停止无底线的讨好和付出，给自己设立感情里的 付出底线 ；请停止脑补和自我内耗，直接告诉对方你的感受和需求；请放下对 冷淡的人 的执念，及时止损。你只需要做最真实的自己，就会有人跨越山海，为你而来。")
-  },
-  R: {
-    type: "R",
-    title: "回避依恋型",
-    icon: <Wind className="w-8 h-8 text-slate-500" />,
-    color: "bg-slate-50 text-slate-600 border-slate-200",
-    bgGradient: "from-slate-50 to-gray-100",
-    description: formatText("你在感情里是典型的回避依恋型，你的恋爱核心底色是：我渴望爱、渴望被理解、渴望有一个人能看穿我的脆弱，可我更怕受伤、怕被束缚、怕失去自我，所以我只能用推开、冷漠、忽冷忽热，来保护自己。"),
-    traits: [
-      formatText("忽冷忽热若即若离，用距离筑起自我保护的围墙：对方越主动靠近，你越会收起温柔，变得冷淡疏离。"),
-      formatText("嘴硬心软口是心非，把所有温柔都藏在心里：明明很在乎，却用敷衍的语气回应，假装自己毫不在意。"),
-      formatText("极度害怕亲密关系，一靠近就想逃：对 亲密 有着本能恐惧，需要足够的私人空间，希望彼此是独立个体。"),
-      formatText("习惯伪装坚强，从不肯在对方面前表露脆弱：总觉得 展示脆弱，就是给对方伤害自己的机会 。"),
-      formatText("因为怕结束，所以不敢开始：觉得 感情总会有结束的一天，不如一开始就不要开始 ，习惯性逃避真爱。")
-    ],
-    rootCause: formatText("你的回避依恋，是INFP天生的强烈自我意识，叠加原生家庭的控制与否定。小时候的 被控制 经历，让你从小就对 束缚 产生了极度恐惧。你害怕陷入感情之后会失去私人空间，会被迫改变自己。你只能用回避和冷漠，来保护自己不再重蹈覆辙。"),
-    idealPartner: "温柔包容、懂分寸、有耐心、给足空间的陪伴型爱人。他能看懂你的嘴硬心软，理解你的回避不是 不爱 ，而是 太怕被伤害 。他会尊重你的私人空间，用细水长流的陪伴，让你慢慢放下防备。",
-    advice: formatText("真正的爱从来都不是束缚，也不是失去自我。请试着放下你的自我保护，从 小步靠近 开始；请试着区分 关心 和 控制 ，不要把对方的所有靠近都当成束缚；请试着放下对 结束 的恐惧。你的温柔和独立值得被人好好珍惜。")
-  },
-  F: {
-    type: "F",
-    title: "温柔安全型",
-    icon: <ShieldCheck className="w-8 h-8 text-teal-500" />,
-    color: "bg-teal-50 text-teal-600 border-teal-200",
-    bgGradient: "from-teal-50 to-emerald-50",
-    description: formatText("你在感情里是温柔安全型，这是INFP在亲密关系中最舒服、最难得的一种状态。你的恋爱核心底色是：我有满心的温柔和真心，也有清醒的认知和坚定的底线，在感情里不焦虑、不回避、温柔而坚定。"),
-    traits: [
-      formatText("温柔包容共情力强，能看见并治愈对方的脆弱：能精准捕捉情绪变化，你的温柔和包容能治愈对方的所有不安。"),
-      formatText("情绪稳定不卑不亢，不会被对方的行为牵引内心：懂得调节心态，不会因为对方的一点点疏忽就陷入焦虑内耗。"),
-      formatText("懂得付出也有底线，平衡爱对方和爱自己的关系：不会无底线的讨好，懂得在爱对方的同时好好爱自己。"),
-      formatText("追求灵魂同频的感情，渴望深度理解和长久陪伴：不追求一时的轰轰烈烈，更渴望细水长流的共鸣。"),
-      formatText("善于沟通懂得包容，不会让矛盾在感情里堆积：保持冷静倾听，温柔坚定地说出感受，懂得换位思考。")
-    ],
-    rootCause: formatText("你能达到这个状态，是因为你既拥有INFP天生的高共情力和温柔细腻，又拥有难得的情绪稳定和清醒认知。你懂得平衡 爱对方 和 爱自己 的关系。自带双向治愈力，既能治愈别人，也能自愈。"),
-    idealPartner: "和你一样温柔真诚、成熟稳重、灵魂同频、懂得珍惜的同频型爱人。他能看懂你的温柔和细腻，能接纳你的所有不完美。他情绪稳定，独立而温柔，懂得双向奔赴。",
-    advice: formatText("你在感情里的状态已经足够好。对你而言，优化是 锦上添花 。请学会更勇敢的表达自己的爱意和需求；请偶尔放下 包容 ，学会表达自己的小情绪；请和对方一起打造属于你们的 恋爱仪式感 。继续保持你原本的样子。")
-  },
-  S: {
-    type: "S",
-    title: "稳定治愈型",
-    icon: <Sparkles className="w-8 h-8 text-indigo-500" />,
-    color: "bg-indigo-50 text-indigo-600 border-indigo-200",
-    bgGradient: "from-indigo-50 to-violet-50",
-    description: formatText("你在感情里是稳定治愈型，这是INFP在亲密关系中最高阶的一种状态。你的底色是：我已经完全接纳了自己的敏感和脆弱，内心的安全感来自自己，在感情里不焦虑不内耗，既能治愈对方，也能活成自己的光。"),
-    traits: [
-      formatText("内心极度稳定，与自己的情绪完全和解：完全接纳了高敏感，不会因为一点小事陷入内耗，心态始终平和。"),
-      formatText("爱自己是第一前提，在感情里始终从容做自己：从不因为爱对方而放弃原则，始终保持独立和个性。"),
-      formatText("成熟沟通解决问题，不逃避、不妥协、不消耗：拥有最成熟的处理能力，直面问题，找到最佳解决方式。"),
-      formatText("信任对方也尊重彼此，平衡亲密和独立的关系：最好感情是 彼此亲密，又各自独立 。"),
-      formatText("自带高阶治愈力，既能治愈对方，也能活成自己的光：不用靠别人肯定来证明自己，自己就能给自己力量。")
-    ],
-    rootCause: formatText("你能达到如此高阶的状态，是因为你经过了漫长的自我接纳、自我成长和自我治愈。你完全接纳了自己包括不完美的特质；你持续自我成长丰富内心；你拥有清晰的自我认知，知道自己想要什么。"),
-    idealPartner: "和你一样内心稳定、成熟独立、温柔通透、懂得彼此成就的高阶治愈型爱人。他懂得爱自己也懂爱别人，他会欣赏你的光芒，和你一起互相滋养、互相成就。",
-    advice: formatText("你的优化是 感情升华 。请和对方一起设立 共同成长目标 ；请学会和对方进行 深度灵魂沟通 ；请始终保持 感情的松弛感 ；请继续保持你的自我成长。最好的感情，是 你很好，我也很好，我们在一起，会更好 。")
-  }
-};
-
-
-export default function App() {
-  const [step, setStep] = useState('intro'); // intro, quiz, loading, result
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState([]);
-  const [scores, setScores] = useState({ A: 0, R: 0, F: 0, S: 0 });
-  const [primaryType, setPrimaryType] = useState(null);
-  const [secondaryType, setSecondaryType] = useState(null);
-
-  const handleStart = () => {
-    setStep('quiz');
-    setCurrentQuestion(0);
-    setAnswers([]);
-    setScores({ A: 0, R: 0, F: 0, S: 0 });
-  };
-
-  const handleAnswer = (optionLabel) => {
-    const newAnswers = [...answers, optionLabel];
-    setAnswers(newAnswers);
-
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-    } else {
-      calculateResult(newAnswers);
-    }
-  };
-
-  const calculateResult = (finalAnswers) => {
-    setStep('loading');
-    
-    // Count frequencies
-    const newScores = { A: 0, R: 0, F: 0, S: 0 };
-    finalAnswers.forEach(ans => {
-      newScores[ans]++;
-    });
-    setScores(newScores);
-
-    // Find primary and secondary
-    const scoreArray = Object.entries(newScores).map(([type, score]) => ({ type, score }));
-    scoreArray.sort((a, b) => b.score - a.score); // Descending
-
-    const primary = scoreArray[0].type;
-    setPrimaryType(primary);
-
-    // Check for compound type (difference <= 2)
-    if (scoreArray[1].score > 0 && (scoreArray[0].score - scoreArray[1].score <= 2)) {
-      setSecondaryType(scoreArray[1].type);
-    } else {
-      setSecondaryType(null);
-    }
-
-    // Fake loading delay for premium feel
-    setTimeout(() => {
-      setStep('result');
-    }, 2500);
-  };
-
-  // UI Components
-  const IntroScreen = () => (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gradient-to-br from-violet-50 via-fuchsia-50 to-indigo-50 text-slate-800 text-center animate-fade-in">
-      <div className="bg-white/60 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50 max-w-md w-full relative overflow-hidden">
-        <div className="absolute top-[-50px] right-[-50px] w-32 h-32 bg-purple-300 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-blob"></div>
-        <div className="absolute bottom-[-50px] left-[-50px] w-32 h-32 bg-pink-300 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-blob animation-delay-2000"></div>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>INFP 恋爱依恋测评</title>
+    <!-- 引入 Tailwind CSS 用于高级 UI 渲染 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                        'fade-in': 'fadeIn 0.6s ease-out forwards',
+                        'spin-slow': 'spin 3s linear infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 隐藏滚动条但保留滚动功能，提升移动端体验 */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        .view { display: none; }
+        .view.active { display: flex; }
         
-        <div className="relative z-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-violet-100 text-violet-600 mb-6 shadow-inner">
-            <Heart className="w-8 h-8 fill-current" />
-          </div>
-          <h1 className="text-3xl font-bold mb-3 tracking-tight text-slate-900">INFP 恋爱依恋测评</h1>
-          <p className="text-violet-600 font-medium mb-8">你好呀，小蝴蝶 ✨</p>
-          
-          <div className="space-y-4 text-left text-sm text-slate-600 mb-8">
-            <p>这是专为INFP量身打造的恋爱依恋深度测评。</p>
-            <p>你是不是在感情里容易敏感、患得患失、过度付出、害怕被丢下？明明很爱却不敢靠近，一亲密就想逃？</p>
-            <p>这份测评会帮你看清：你在感情里的依恋类型、核心不安来源、最适合你的爱人，以及如何在关系里不内耗。</p>
-            <div className="bg-white/50 p-4 rounded-xl border border-violet-100 flex items-start gap-3 mt-4">
-               <Lock className="w-5 h-5 text-violet-500 flex-shrink-0 mt-0.5" />
-               <p className="text-xs text-slate-500 leading-relaxed">本测评共30题，请按你最真实、最本能的样子选择，而不是你 理想中应该的样子 。</p>
-            </div>
-          </div>
+        /* 确保长文本换行 */
+        body { -webkit-font-smoothing: antialiased; }
+    </style>
+</head>
+<body class="font-sans selection:bg-violet-200 selection:text-violet-900 bg-[#fdfbf7] text-slate-800 overflow-x-hidden">
 
-          <button 
-            onClick={handleStart}
-            className="w-full py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-2xl font-semibold text-lg transition-all duration-300 shadow-lg shadow-violet-200 transform hover:-translate-y-1"
-          >
-            开启深度测评
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const QuizScreen = () => {
-    const q = questions[currentQuestion];
-    const progress = ((currentQuestion) / questions.length) * 100;
-
-    return (
-      <div className="flex flex-col min-h-screen bg-[#fdfbf7] p-6 text-slate-800">
-        <div className="max-w-lg w-full mx-auto pt-8">
-          {/* Progress Bar */}
-          <div className="mb-10">
-            <div className="flex justify-between text-xs font-semibold text-slate-400 mb-2 px-1">
-              <span>探索进度</span>
-              <span>{currentQuestion + 1} / {questions.length}</span>
-            </div>
-            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-violet-500 transition-all duration-500 ease-out rounded-full"
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
-          </div>
-
-          {/* Question Card */}
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 min-h-[400px] flex flex-col transition-all duration-300">
-            <h2 className="text-xl font-bold leading-relaxed mb-8 text-slate-800">
-              {q.text}
-            </h2>
+    <!-- ==================== 视图 1：欢迎页 ==================== -->
+    <div id="view-intro" class="view active flex-col items-center justify-center min-h-screen p-6 bg-gradient-to-br from-violet-50 via-fuchsia-50 to-indigo-50 text-center animate-fade-in relative overflow-hidden">
+        <div class="bg-white/60 backdrop-blur-xl p-8 rounded-3xl shadow-xl border border-white/50 max-w-md w-full relative z-10">
+            <!-- 装饰性光晕 -->
+            <div class="absolute top-[-50px] right-[-50px] w-32 h-32 bg-purple-300 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-blob"></div>
+            <div class="absolute bottom-[-50px] left-[-50px] w-32 h-32 bg-pink-300 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-blob" style="animation-delay: 2s;"></div>
             
-            <div className="space-y-4 mt-auto">
-              {q.options.map((opt, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleAnswer(opt.label)}
-                  className="w-full text-left p-4 rounded-2xl border-2 border-slate-50 bg-slate-50 hover:border-violet-300 hover:bg-violet-50 transition-all duration-200 text-slate-700 font-medium group flex items-center justify-between"
-                >
-                  <span>{opt.text}</span>
-                  <div className="w-6 h-6 rounded-full border-2 border-slate-200 group-hover:border-violet-400 flex items-center justify-center">
-                    <div className="w-2.5 h-2.5 rounded-full bg-violet-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const LoadingScreen = () => (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#fdfbf7] text-slate-800">
-      <div className="relative w-24 h-24 mb-6">
-        <div className="absolute inset-0 border-4 border-violet-100 rounded-full"></div>
-        <div className="absolute inset-0 border-4 border-violet-500 rounded-full border-t-transparent animate-spin"></div>
-        <Fingerprint className="w-10 h-10 text-violet-400 absolute inset-0 m-auto animate-pulse" />
-      </div>
-      <h2 className="text-xl font-bold text-slate-700 mb-2">正在生成您的深度情感报告</h2>
-      <p className="text-slate-400 text-sm">解析 INFP 潜意识羁绊...</p>
-    </div>
-  );
-
-  const ResultScreen = () => {
-    const primary = resultDetails[primaryType];
-    const secondary = secondaryType ? resultDetails[secondaryType] : null;
-
-    return (
-      <div className={`min-h-screen bg-gradient-to-br ${primary.bgGradient} p-6 pb-24 text-slate-800 animate-fade-in`}>
-        <div className="max-w-md w-full mx-auto space-y-6 pt-4">
-          
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-block px-4 py-1.5 rounded-full bg-white/60 backdrop-blur-md border border-white/80 text-sm font-semibold text-slate-600 mb-4 shadow-sm">
-              INFP 专属依恋分析报告
-            </div>
-            <div className={`mx-auto w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-lg mb-6 ${primary.color.split(' ')[1]}`}>
-              {primary.icon}
-            </div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">
-              {primary.title}
-            </h1>
-            {secondary && (
-              <p className="text-sm font-medium text-slate-500 bg-white/50 inline-block px-3 py-1 rounded-lg">
-                复合倾向：偏向 {secondary.title}
-              </p>
-            )}
-          </div>
-
-          {/* Intro Description */}
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-sm border border-white">
-            <p className="text-slate-700 leading-relaxed font-medium">
-              {primary.description}
-            </p>
-          </div>
-
-          {/* Traits List */}
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-sm border border-white">
-            <h3 className="text-lg font-bold flex items-center gap-2 mb-5 text-slate-800">
-              <Sparkles className="w-5 h-5 text-yellow-500" />
-              你的核心恋爱特征
-            </h3>
-            <ul className="space-y-4">
-              {primary.traits.map((trait, idx) => {
-                const [title, desc] = trait.split('：');
-                return (
-                  <li key={idx} className="flex items-start gap-3">
-                    <CheckCircle2 className={`w-5 h-5 mt-0.5 flex-shrink-0 ${primary.color.split(' ')[1]}`} />
-                    <div>
-                      <span className="font-bold text-slate-700 block">{title}</span>
-                      {desc && <span className="text-slate-500 text-sm mt-1 block leading-relaxed">{desc}</span>}
+            <div class="relative z-20">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-violet-100 text-violet-600 mb-6 shadow-inner">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" stroke="none" class="w-8 h-8"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                </div>
+                <h1 class="text-3xl font-bold mb-3 tracking-tight text-slate-900">INFP 恋爱依恋测评</h1>
+                <p class="text-violet-600 font-medium mb-8">你好呀，小蝴蝶 ✨</p>
+                
+                <div class="space-y-4 text-left text-sm text-slate-600 mb-8 relative">
+                    <p>这是专为INFP量身打造的恋爱依恋深度测评。</p>
+                    <p>你是不是在感情里容易敏感、患得患失、过度付出、害怕被丢下？明明很爱却不敢靠近，一亲密就想逃？</p>
+                    <p>这份测评会帮你看清：你在感情里的依恋类型、核心不安来源、最适合你的爱人，以及如何在关系里不内耗。</p>
+                    <div class="bg-white/50 p-4 rounded-xl border border-violet-100 flex items-start gap-3 mt-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-violet-500 flex-shrink-0 mt-0.5"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <p class="text-xs text-slate-500 leading-relaxed">本测评共30题，请按你最真实、最本能的样子选择，而不是你 理想中应该的样子 。</p>
                     </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+                </div>
 
-          {/* Root Cause */}
-          <div className="bg-slate-800 text-white rounded-3xl p-6 shadow-lg relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10 blur-2xl"></div>
-            <h3 className="text-lg font-bold flex items-center gap-2 mb-3 text-white">
-              <AlertCircle className="w-5 h-5 text-slate-300" />
-              不安的核心根源
-            </h3>
-            <p className="text-slate-300 text-sm leading-relaxed">
-              {primary.rootCause}
-            </p>
-          </div>
-
-          {/* Ideal Partner */}
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-sm border border-white">
-             <h3 className="text-lg font-bold flex items-center gap-2 mb-3 text-slate-800">
-              <Heart className="w-5 h-5 text-rose-400" />
-              最适合你的爱人
-            </h3>
-            <p className="text-slate-600 leading-relaxed text-sm">
-              {primary.idealPartner}
-            </p>
-          </div>
-
-          {/* Advice */}
-          <div className={`rounded-3xl p-6 shadow-sm border ${primary.color.replace('text-', 'border-').replace('bg-', 'bg-opacity-50 bg-')} bg-white`}>
-             <h3 className={`text-lg font-bold flex items-center gap-2 mb-3 ${primary.color.split(' ')[1]}`}>
-              <ShieldCheck className="w-5 h-5" />
-              专属恋爱建议
-            </h3>
-            <p className="text-slate-700 leading-relaxed text-sm font-medium">
-              {primary.advice}
-            </p>
-          </div>
-
-          {/* Secondary Reading Notice */}
-          {secondary && (
-            <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-5 border border-white/60 text-center">
-              <p className="text-sm text-slate-600 mb-2">你的得分为复合型，也带有一定的 <span className="font-bold">{secondary.title}</span> 特质。</p>
-              <p className="text-xs text-slate-400">在特定环境或面对特定对象时，这种特质会被激发。</p>
+                <button onclick="startQuiz()" class="w-full py-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-2xl font-semibold text-lg transition-all duration-300 shadow-lg shadow-violet-200 transform hover:-translate-y-1">
+                    开启深度测评
+                </button>
             </div>
-          )}
-
-          {/* Restart Button */}
-          <button 
-            onClick={handleStart}
-            className="w-full py-4 mt-8 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-sm border border-slate-200"
-          >
-            <RotateCcw className="w-5 h-5" />
-            重新测试
-          </button>
-          
-          <div className="text-center text-xs text-slate-400 mt-6 pb-6">
-            <p>愿你往后，在感情里：</p>
-            <p>爱得清醒，不慌不忙；爱得温柔，也有锋芒。</p>
-          </div>
-
         </div>
-      </div>
-    );
-  };
-
-  return (
-    <div className="font-sans antialiased selection:bg-violet-200 selection:text-violet-900">
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob { animation: blob 7s infinite; }
-        .animation-delay-2000 { animation-delay: 2s; }
-        .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}} />
-      
-      {step === 'intro' && <IntroScreen />}
-      {step === 'quiz' && <QuizScreen />}
-      {step === 'loading' && <LoadingScreen />}
-      {step === 'result' && <ResultScreen />}
     </div>
-  );
-}
+
+    <!-- ==================== 视图 2：答题页 ==================== -->
+    <div id="view-quiz" class="view flex-col min-h-screen p-6 animate-fade-in relative">
+        <div class="max-w-lg w-full mx-auto pt-8 flex-1 flex flex-col">
+            <!-- 进度条 -->
+            <div class="mb-10">
+                <div class="flex justify-between text-xs font-semibold text-slate-400 mb-2 px-1">
+                    <span>探索进度</span>
+                    <span id="progress-text">1 / 30</span>
+                </div>
+                <div class="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="h-full bg-violet-500 transition-all duration-500 ease-out rounded-full" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- 题目卡片 -->
+            <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 flex-1 flex flex-col transition-all duration-300">
+                <h2 id="question-text" class="text-xl font-bold leading-relaxed mb-8 text-slate-800">
+                    <!-- 题目动态渲染在这里 -->
+                </h2>
+                
+                <div id="options-container" class="space-y-4 mt-auto pb-4">
+                    <!-- 选项动态渲染在这里 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 视图 3：加载计算页 ==================== -->
+    <div id="view-loading" class="view flex-col items-center justify-center min-h-screen animate-fade-in">
+        <div class="relative w-24 h-24 mb-6">
+            <div class="absolute inset-0 border-4 border-violet-100 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-violet-500 rounded-full border-t-transparent animate-spin"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10 text-violet-400 absolute inset-0 m-auto animate-pulse"><path d="M12 2a10 10 0 0 0-10 10 10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2Z"/><path d="M12 6a6 6 0 0 0-6 6 6 6 0 0 0 6 6 6 6 0 0 0 6-6 6 6 0 0 0-6-6Z"/><path d="M12 10a2 2 0 0 0-2 2 2 2 0 0 0 2 2 2 2 0 0 0 2-2 2 2 0 0 0-2-2Z"/></svg>
+        </div>
+        <h2 class="text-xl font-bold text-slate-700 mb-2">正在生成您的深度情感报告</h2>
+        <p class="text-slate-400 text-sm">解析 INFP 潜意识羁绊...</p>
+    </div>
+
+    <!-- ==================== 视图 4：结果报告页 ==================== -->
+    <div id="view-result" class="view flex-col min-h-screen p-6 pb-24 animate-fade-in" style="background: linear-gradient(to bottom right, var(--bg-start), var(--bg-end));">
+        <div class="max-w-md w-full mx-auto space-y-6 pt-4">
+            
+            <!-- 头部 -->
+            <div class="text-center mb-8">
+                <div class="inline-block px-4 py-1.5 rounded-full bg-white/60 backdrop-blur-md border border-white/80 text-sm font-semibold text-slate-600 mb-4 shadow-sm">
+                    INFP 专属依恋分析报告
+                </div>
+                <div id="res-icon-wrapper" class="mx-auto w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-lg mb-6">
+                    <!-- Icon -->
+                </div>
+                <h1 id="res-title" class="text-4xl font-extrabold tracking-tight text-slate-900 mb-2"></h1>
+                <div id="res-secondary-wrapper" class="hidden mt-2">
+                    <p id="res-secondary-text" class="text-sm font-medium text-slate-500 bg-white/50 inline-block px-3 py-1 rounded-lg"></p>
+                </div>
+            </div>
+
+            <!-- 核心描述 -->
+            <div class="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-sm border border-white">
+                <p id="res-desc" class="text-slate-700 leading-relaxed font-medium"></p>
+            </div>
+
+            <!-- 核心恋爱特征 -->
+            <div class="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-sm border border-white">
+                <h3 class="text-lg font-bold flex items-center gap-2 mb-5 text-slate-800">
+                    <svg class="w-5 h-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z"/></svg>
+                    你的核心恋爱特征
+                </h3>
+                <ul id="res-traits" class="space-y-4"></ul>
+            </div>
+
+            <!-- 不安的核心根源 -->
+            <div class="bg-slate-800 text-white rounded-3xl p-6 shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+                <h3 class="text-lg font-bold flex items-center gap-2 mb-3 text-white">
+                    <svg class="w-5 h-5 text-slate-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    不安的核心根源
+                </h3>
+                <p id="res-root-cause" class="text-slate-300 text-sm leading-relaxed"></p>
+            </div>
+
+            <!-- 最适合的爱人 -->
+            <div class="bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-sm border border-white">
+                <h3 class="text-lg font-bold flex items-center gap-2 mb-3 text-slate-800">
+                    <svg class="w-5 h-5 text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    最适合你的爱人
+                </h3>
+                <p id="res-partner" class="text-slate-600 leading-relaxed text-sm"></p>
+            </div>
+
+            <!-- 专属恋爱建议 -->
+            <div id="res-advice-wrapper" class="rounded-3xl p-6 shadow-sm border bg-white bg-opacity-70">
+                <h3 id="res-advice-title" class="text-lg font-bold flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    专属恋爱建议
+                </h3>
+                <p id="res-advice" class="text-slate-700 leading-relaxed text-sm font-medium"></p>
+            </div>
+
+            <!-- 副型提示框 -->
+            <div id="res-secondary-alert" class="hidden bg-white/50 backdrop-blur-sm rounded-2xl p-5 border border-white/60 text-center mt-6">
+                <p class="text-sm text-slate-600 mb-2">你的得分为复合型，也带有一定的 <span id="res-alert-name" class="font-bold"></span> 特质。</p>
+                <p class="text-xs text-slate-400">在特定环境或面对特定对象时，这种特质会被激发。</p>
+            </div>
+
+            <!-- 重新测试按钮 -->
+            <button onclick="resetApp()" class="w-full py-4 mt-8 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-sm border border-slate-200">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                重新测试
+            </button>
+            
+            <div class="text-center text-xs text-slate-400 mt-6 pb-6">
+                <p>愿你往后，在感情里：</p>
+                <p>爱得清醒，不慌不忙；爱得温柔，也有锋芒。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 核心逻辑 ==================== -->
+    <script>
+        // 核心配置与工具函数
+        // 按要求：将所有双引号替换为空格以作强调
+        const formatText = (text) => text.replace(/[“”]/g, ' ');
+
+        // 图标 SVG 模板
+        const icons = {
+            A: `<svg class="w-8 h-8 text-rose-500" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`,
+            R: `<svg class="w-8 h-8 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>`,
+            F: `<svg class="w-8 h-8 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>`,
+            S: `<svg class="w-8 h-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z"/></svg>`
+        };
+
+        const resultDetails = {
+            A: {
+                title: "焦虑依恋型", icon: icons.A,
+                themeColor: "text-rose-600", borderColor: "border-rose-200", wrapperClass: "text-rose-600",
+                bgStart: "#fff1f2", bgEnd: "#fff7ed", // rose-50 to orange-50
+                description: formatText("你在感情里是典型的焦虑依恋型，这也是INFP 高敏感特质在亲密关系中最直接的体现，你的恋爱核心底色始终是：我不够好，我怕被丢下，所以我要拼命讨好、付出、抓住你，用所有的温柔和迁就，换对方不离开的承诺。"),
+                traits: [
+                    formatText("极度敏感缺爱，情绪完全被对方牵引：你对感情里的 负面信号 感知力极强，对方的一点点疏忽都会被你无限放大。"),
+                    formatText("习惯性讨好付出，在感情里不断失去自我：为了留住对方的爱意，你会不自觉的迁就对方的所有要求。"),
+                    formatText("过度粘人依赖，需要时刻确认对方的爱意：甚至会通过 闹小脾气   提分手 等极端方式试探对方的心意。"),
+                    formatText("越爱越卑微，越在乎越容易陷入自我否定：哪怕对方做出了伤害你的事，你也会先从自己身上找原因。"),
+                    formatText("容易陷入执念式恋爱，对冷淡的人越陷越深：对方越对你冷淡，你越觉得 我再努力一点就能捂热他的心 。")
+                ],
+                rootCause: formatText("你的焦虑依恋，从来都不是 性格矫情 或 爱得太深 ，而是INFP天生的高敏感特质，叠加原生家庭的情感忽视。小时候大概率很少被无条件接纳，形成了 我必须足够优秀，才值得被爱 的核心认知。如果过往受过伤，你会下意识的用过度的付出和粘人，来填补内心的安全感缺口。"),
+                idealPartner: "情绪稳定、主动温柔、有耐心、懂包容的治愈型爱人。他能接住你的所有焦虑和不安，不会因为你的粘人而烦躁，不会用冷暴力消耗你的真心。他的爱意是稳定的、持续的、看得见的。",
+                advice: formatText("真正的爱从来都不是靠讨好和迁就换来的。请停止无底线的讨好和付出，给自己设立感情里的 付出底线 ；请停止脑补和自我内耗，直接告诉对方你的感受和需求；请放下对 冷淡的人 的执念，及时止损。你只需要做最真实的自己，就会有人跨越山海，为你而来。")
+            },
+            R: {
+                title: "回避依恋型", icon: icons.R,
+                themeColor: "text-slate-600", borderColor: "border-slate-200", wrapperClass: "text-slate-600",
+                bgStart: "#f8fafc", bgEnd: "#f1f5f9", // slate-50 to slate-100
+                description: formatText("你在感情里是典型的回避依恋型，你的恋爱核心底色是：我渴望爱、渴望被理解、渴望有一个人能看穿我的脆弱，可我更怕受伤、怕被束缚、怕失去自我，所以我只能用推开、冷漠、忽冷忽热，来保护自己。"),
+                traits: [
+                    formatText("忽冷忽热若即若离，用距离筑起自我保护的围墙：对方越主动靠近，你越会收起温柔，变得冷淡疏离。"),
+                    formatText("嘴硬心软口是心非，把所有温柔都藏在心里：明明很在乎，却用敷衍的语气回应，假装自己毫不在意。"),
+                    formatText("极度害怕亲密关系，一靠近就想逃：对 亲密 有着本能恐惧，需要足够的私人空间，希望彼此是独立个体。"),
+                    formatText("习惯伪装坚强，从不肯在对方面前表露脆弱：总觉得 展示脆弱，就是给对方伤害自己的机会 。"),
+                    formatText("因为怕结束，所以不敢开始：觉得 感情总会有结束的一天，不如一开始就不要开始 ，习惯性逃避真爱。")
+                ],
+                rootCause: formatText("你的回避依恋，是INFP天生的强烈自我意识，叠加原生家庭的控制与否定。小时候的 被控制 经历，让你从小就对 束缚 产生了极度恐惧。你害怕陷入感情之后会失去私人空间，会被迫改变自己。你只能用回避和冷漠，来保护自己不再重蹈覆辙。"),
+                idealPartner: "温柔包容、懂分寸、有耐心、给足空间的陪伴型爱人。他能看懂你的嘴硬心软，理解你的回避不是 不爱 ，而是 太怕被伤害 。他会尊重你的私人空间，用细水长流的陪伴，让你慢慢放下防备。",
+                advice: formatText("真正的爱从来都不是束缚，也不是失去自我。请试着放下你的自我保护，从 小步靠近 开始；请试着区分 关心 和 控制 ，不要把对方的所有靠近都当成束缚；请试着放下对 结束 的恐惧。你的温柔和独立值得被人好好珍惜。")
+            },
+            F: {
+                title: "温柔安全型", icon: icons.F,
+                themeColor: "text-teal-600", borderColor: "border-teal-200", wrapperClass: "text-teal-600",
+                bgStart: "#f0fdfa", bgEnd: "#ecfdf5", // teal-50 to emerald-50
+                description: formatText("你在感情里是温柔安全型，这是INFP在亲密关系中最舒服、最难得的一种状态。你的恋爱核心底色是：我有满心的温柔和真心，也有清醒的认知和坚定的底线，在感情里不焦虑、不回避、温柔而坚定。"),
+                traits: [
+                    formatText("温柔包容共情力强，能看见并治愈对方的脆弱：能精准捕捉情绪变化，你的温柔和包容能治愈对方的所有不安。"),
+                    formatText("情绪稳定不卑不亢，不会被对方的行为牵引内心：懂得调节心态，不会因为对方的一点点疏忽就陷入焦虑内耗。"),
+                    formatText("懂得付出也有底线，平衡爱对方和爱自己的关系：不会无底线的讨好，懂得在爱对方的同时好好爱自己。"),
+                    formatText("追求灵魂同频的感情，渴望深度理解和长久陪伴：不追求一时的轰轰烈烈，更渴望细水长流的共鸣。"),
+                    formatText("善于沟通懂得包容，不会让矛盾在感情里堆积：保持冷静倾听，温柔坚定地说出感受，懂得换位思考。")
+                ],
+                rootCause: formatText("你能达到这个状态，是因为你既拥有INFP天生的高共情力和温柔细腻，又拥有难得的情绪稳定和清醒认知。你懂得平衡 爱对方 和 爱自己 的关系。自带双向治愈力，既能治愈别人，也能自愈。"),
+                idealPartner: "和你一样温柔真诚、成熟稳重、灵魂同频、懂得珍惜的同频型爱人。他能看懂你的温柔和细腻，能接纳你的所有不完美。他情绪稳定，独立而温柔，懂得双向奔赴。",
+                advice: formatText("你在感情里的状态已经足够好。对你而言，优化是 锦上添花 。请学会更勇敢的表达自己的爱意和需求；请偶尔放下 包容 ，学会表达自己的小情绪；请和对方一起打造属于你们的 恋爱仪式感 。继续保持你原本的样子。")
+            },
+            S: {
+                title: "稳定治愈型", icon: icons.S,
+                themeColor: "text-indigo-600", borderColor: "border-indigo-200", wrapperClass: "text-indigo-600",
+                bgStart: "#eef2ff", bgEnd: "#f5f3ff", // indigo-50 to violet-50
+                description: formatText("你在感情里是稳定治愈型，这是INFP在亲密关系中最高阶的一种状态。你的底色是：我已经完全接纳了自己的敏感和脆弱，内心的安全感来自自己，在感情里不焦虑不内耗，既能治愈对方，也能活成自己的光。"),
+                traits: [
+                    formatText("内心极度稳定，与自己的情绪完全和解：完全接纳了高敏感，不会因为一点小事陷入内耗，心态始终平和。"),
+                    formatText("爱自己是第一前提，在感情里始终从容做自己：从不因为爱对方而放弃原则，始终保持独立和个性。"),
+                    formatText("成熟沟通解决问题，不逃避、不妥协、不消耗：拥有最成熟的处理能力，直面问题，找到最佳解决方式。"),
+                    formatText("信任对方也尊重彼此，平衡亲密和独立的关系：最好感情是 彼此亲密，又各自独立 。"),
+                    formatText("自带高阶治愈力，既能治愈对方，也能活成自己的光：不用靠别人肯定来证明自己，自己就能给自己力量。")
+                ],
+                rootCause: formatText("你能达到如此高阶的状态，是因为你经过了漫长的自我接纳、自我成长和自我治愈。你完全接纳了自己包括不完美的特质；你持续自我成长丰富内心；你拥有清晰的自我认知，知道自己想要什么。"),
+                idealPartner: "和你一样内心稳定、成熟独立、温柔通透、懂得彼此成就的高阶治愈型爱人。他懂得爱自己也懂爱别人，他会欣赏你的光芒，和你一起互相滋养、互相成就。",
+                advice: formatText("你的优化是 感情升华 。请和对方一起设立 共同成长目标 ；请学会和对方进行 深度灵魂沟通 ；请始终保持 感情的松弛感 ；请继续保持你的自我成长。最好的感情，是 你很好，我也很好，我们在一起，会更好 。")
+            }
+        };
+
+        const questions = [
+            { text: "喜欢上一个人后,你会特别在意对方回消息的速度吗?", options: [{ label: "A", text: "非常在意,回慢了会不安" }, { label: "R", text: "偶尔会,但尽量不表现" }, { label: "F", text: "会,但不会追问" }, { label: "S", text: "不太在意,信任对方" }] },
+            { text: "对方稍微冷淡一点,你就会开始想:他是不是不爱我了?", options: [{ label: "A", text: "经常这样,瞬间焦虑" }, { label: "R", text: "会默默猜测,但不直说" }, { label: "F", text: "会有点失落,但能自我安抚" }, { label: "S", text: "很少,相信只是暂时忙" }] },
+            { text: "你在感情里更容易?", options: [{ label: "A", text: "过度付出、讨好、怕失去" }, { label: "R", text: "想靠近又想推开、忽冷忽热" }, { label: "F", text: "默默等待、温柔包容" }, { label: "S", text: "稳定安心、不粘人也不疏离" }] },
+            { text: "被喜欢的人忽略时,你第一反应是?", options: [{ label: "A", text: "自我否定、是不是我不够好" }, { label: "R", text: "假装无所谓、偷偷难过" }, { label: "F", text: "安静等待、不闹不逼" }, { label: "S", text: "直接沟通、不内耗" }] },
+            { text: "进入亲密关系后,你会变得比平时更敏感脆弱吗?", options: [{ label: "A", text: "非常明显,完全变个人" }, { label: "R", text: "会,但会刻意克制" }, { label: "F", text: "会一点,但依然温柔" }, { label: "S", text: "不会,反而更放松" }] },
+            { text: "你害怕对方对你失去新鲜感吗?", options: [{ label: "A", text: "极度害怕,一直不安" }, { label: "R", text: "有点怕,所以保持距离" }, { label: "F", text: "有点怕,但相信真心" }, { label: "S", text: "不怕,信任彼此的感情" }] },
+            { text: "对方对你好,你会受宠若惊,甚至想加倍偿还吗?", options: [{ label: "A", text: "经常这样,怕配不上" }, { label: "R", text: "会,但不敢完全接受" }, { label: "F", text: "会温柔回应" }, { label: "S", text: "坦然接受,也会回馈" }] },
+            { text: "吵架或冷战时,你最容易?", options: [{ label: "A", text: "主动妥协、道歉、求和" }, { label: "R", text: "嘴硬心软、假装不在乎" }, { label: "F", text: "默默难过、等待缓和" }, { label: "S", text: "冷静沟通、解决问题" }] },
+            { text: "你内心深处最恐惧的是?", options: [{ label: "A", text: "被抛弃、不被爱" }, { label: "R", text: "被束缚、失去自我" }, { label: "F", text: "不被理解、不懂我" }, { label: "S", text: "没有特别恐惧的" }] },
+            { text: "你在感情里是不是经常委屈自己、迁就对方?", options: [{ label: "A", text: "经常,习惯讨好" }, { label: "R", text: "偶尔,但会很快抽离" }, { label: "F", text: "会包容,但有底线" }, { label: "S", text: "平等相处,不委屈自己" }] },
+            { text: "喜欢一个人,你会忍不住反复翻看对方的动态吗?", options: [{ label: "A", text: "控制不住地看" }, { label: "R", text: "偶尔看,但不表现" }, { label: "F", text: "悄悄关注" }, { label: "S", text: "很少,信任为主" }] },
+            { text: "你害怕对方看到你真实的脆弱和负面情绪吗?", options: [{ label: "A", text: "非常怕,只敢展示好的一面" }, { label: "R", text: "有点怕,所以保持距离" }, { label: "F", text: "有点怕,但慢慢会敞开" }, { label: "S", text: "不怕,愿意真实相处" }] },
+            { text: "对方不回消息,你会脑补很多负面剧情吗?", options: [{ label: "A", text: "经常,越想越难过" }, { label: "R", text: "会,但很快告诉自己别想" }, { label: "F", text: "会有点失落,但不乱猜" }, { label: "S", text: "不会,相信对方" }] },
+            { text: "你在感情里更像是?", options: [{ label: "A", text: "粘人、需要安全感的一方" }, { label: "R", text: "独立、忽冷忽热的一方" }, { label: "F", text: "温柔、包容、陪伴的一方" }, { label: "S", text: "稳定、成熟、安心的一方" }] },
+            { text: "你会因为太在乎,而变得小心翼翼吗?", options: [{ label: "A", text: "一直小心翼翼" }, { label: "R", text: "会,但会假装洒脱" }, { label: "F", text: "会温柔,但不卑微" }, { label: "S", text: "自然放松,不刻意" }] },
+            { text: "你害怕进入太亲密、没有私人空间的关系吗?", options: [{ label: "A", text: "不怕,只想被抱紧" }, { label: "R", text: "非常怕,一亲密就想逃" }, { label: "F", text: "不怕,但需要一点空间" }, { label: "S", text: "不怕,亲密和空间都能平衡" }] },
+            { text: "你很容易在感情里自我感动、自我内耗吗?", options: [{ label: "A", text: "经常内耗到失眠" }, { label: "R", text: "会内耗,但很快抽离" }, { label: "F", text: "偶尔内耗,能自我调节" }, { label: "S", text: "几乎不内耗" }] },
+            { text: "你渴望的是?", options: [{ label: "A", text: "绝对偏爱、时刻被在乎" }, { label: "R", text: "灵魂契合、互不束缚" }, { label: "F", text: "深度理解、长久陪伴" }, { label: "S", text: "轻松舒服、稳定安心" }] },
+            { text: "你会不会明明很想对方,却故意不主动?", options: [{ label: "A", text: "不会,很想就会找" }, { label: "R", text: "经常,嘴硬心软" }, { label: "F", text: "偶尔,怕打扰对方" }, { label: "S", text: "想就会自然表达" }] },
+            { text: "你在感情里最缺的是?", options: [{ label: "A", text: "安全感、确定性" }, { label: "R", text: "自由、自我空间" }, { label: "F", text: "理解、共情" }, { label: "S", text: "什么都不缺,内心稳定" }] },
+            { text: "对方稍微凶一点、语气差一点,你会瞬间受伤吗?", options: [{ label: "A", text: "非常受伤,会记很久" }, { label: "R", text: "表面没事,心里难过" }, { label: "F", text: "会难过,但会说出来" }, { label: "S", text: "会沟通,不轻易受伤" }] },
+            { text: "你容易在感情里失去自我、围着对方转吗?", options: [{ label: "A", text: "完全会,失去自己" }, { label: "R", text: "不会,很怕失去自我" }, { label: "F", text: "会投入,但保留自己" }, { label: "S", text: "不会,保持独立" }] },
+            { text: "你相信自己值得被坚定选择吗?", options: [{ label: "A", text: "不太相信,总怕被代替" }, { label: "R", text: "半信半疑,所以保持距离" }, { label: "F", text: "相信,慢慢被治愈" }, { label: "S", text: "完全相信,值得被爱" }] },
+            { text: "你喜欢一个人,更倾向于?", options: [{ label: "A", text: "全心全意付出" }, { label: "R", text: "默默关注,不轻易靠近" }, { label: "F", text: "温柔陪伴,细水长流" }, { label: "S", text: "自然相处,轻松舒服" }] },
+            { text: "你害怕对方发现你的缺点后不喜欢你吗?", options: [{ label: "A", text: "极度害怕,一直伪装" }, { label: "R", text: "有点怕,所以保持距离" }, { label: "F", text: "有点怕,但愿意慢慢暴露" }, { label: "S", text: "不怕,接受真实的我才是爱" }] },
+            { text: "感情里你最不能接受的是?", options: [{ label: "A", text: "冷暴力、忽冷忽热" }, { label: "R", text: "控制欲强、管太多" }, { label: "F", text: "不理解、不同频" }, { label: "S", text: "背叛、不真诚" }] },
+            { text: "你会因为害怕结束,而不敢开始一段感情吗?", options: [{ label: "A", text: "不会,太渴望被爱" }, { label: "R", text: "经常,怕受伤所以逃避" }, { label: "F", text: "偶尔,会犹豫很久" }, { label: "S", text: "不会,愿意认真体验" }] },
+            { text: "你在感情里最需要的是?", options: [{ label: "A", text: "时刻回应、安全感" }, { label: "R", text: "空间自由、不被束缚" }, { label: "F", text: "深度共情、被理解" }, { label: "S", text: "稳定平等、互相尊重" }] },
+            { text: "你是不是容易爱上不主动、冷淡的人?", options: [{ label: "A", text: "经常,越冷淡越上头" }, { label: "R", text: "会被吸引,但会逃离" }, { label: "F", text: "会心疼,但更偏爱温柔" }, { label: "S", text: "不会,只喜欢温柔主动的" }] },
+            { text: "如果可以,你最想在感情里变成?", options: [{ label: "A", text: "不再害怕被丢下" }, { label: "R", text: "敢爱又不怕亲密" }, { label: "F", text: "一直温柔不受伤" }, { label: "S", text: "永远安心不内耗" }] }
+        ];
+
+        // 状态变量
+        let currentQuestion = 0;
+        let answers = [];
+
+        // 视图切换
+        function switchView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        // 开始测试
+        function startQuiz() {
+            currentQuestion = 0;
+            answers = [];
+            renderQuestion();
+            switchView('view-quiz');
+        }
+
+        // 渲染题目
+        function renderQuestion() {
+            const q = questions[currentQuestion];
+            const progressPercent = (currentQuestion / questions.length) * 100;
+            
+            document.getElementById('progress-text').innerText = `${currentQuestion + 1} / ${questions.length}`;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+            document.getElementById('question-text').innerText = q.text;
+
+            const optsContainer = document.getElementById('options-container');
+            optsContainer.innerHTML = '';
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-2xl border-2 border-slate-50 bg-slate-50 hover:border-violet-300 hover:bg-violet-50 transition-all duration-200 text-slate-700 font-medium group flex items-center justify-between";
+                btn.innerHTML = `
+                    <span>${opt.text}</span>
+                    <div class="w-6 h-6 rounded-full border-2 border-slate-200 group-hover:border-violet-400 flex items-center justify-center">
+                        <div class="w-2.5 h-2.5 rounded-full bg-violet-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </div>
+                `;
+                btn.onclick = () => handleAnswer(opt.label);
+                optsContainer.appendChild(btn);
+            });
+        }
+
+        // 处理回答
+        function handleAnswer(label) {
+            answers.push(label);
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                renderQuestion();
+            } else {
+                calculateResult();
+            }
+        }
+
+        // 计算结果
+        function calculateResult() {
+            switchView('view-loading');
+            
+            let counts = { A: 0, R: 0, F: 0, S: 0 };
+            answers.forEach(ans => counts[ans]++);
+
+            let sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+            let primaryType = sorted[0][0];
+            let secondaryType = null;
+
+            // 复合型判定逻辑
+            if (sorted[1][1] > 0 && (sorted[0][1] - sorted[1][1] <= 2)) {
+                secondaryType = sorted[1][0];
+            }
+
+            // 模拟分析耗时动画 (2.5秒后展示结果)
+            setTimeout(() => {
+                renderResult(primaryType, secondaryType);
+                switchView('view-result');
+            }, 2500);
+        }
+
+        // 渲染结果页内容
+        function renderResult(pType, sType) {
+            const primary = resultDetails[pType];
+            const rootEl = document.getElementById('view-result');
+            
+            // 设置动态背景色
+            rootEl.style.setProperty('--bg-start', primary.bgStart);
+            rootEl.style.setProperty('--bg-end', primary.bgEnd);
+
+            document.getElementById('res-icon-wrapper').innerHTML = primary.icon;
+            // 处理卡片内部主题色
+            document.getElementById('res-icon-wrapper').className = `mx-auto w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-lg mb-6 ${primary.wrapperClass}`;
+
+            document.getElementById('res-title').innerText = primary.title;
+            document.getElementById('res-desc').innerText = primary.description;
+            
+            // 核心特征列表渲染
+            const traitsContainer = document.getElementById('res-traits');
+            traitsContainer.innerHTML = '';
+            primary.traits.forEach(trait => {
+                let parts = trait.split('：');
+                let title = parts[0];
+                let desc = parts[1] || "";
+                
+                traitsContainer.innerHTML += `
+                    <li class="flex items-start gap-3">
+                        <svg class="w-5 h-5 mt-0.5 flex-shrink-0 ${primary.themeColor}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div>
+                            <span class="font-bold text-slate-700 block">${title}</span>
+                            ${desc ? `<span class="text-slate-500 text-sm mt-1 block leading-relaxed">${desc}</span>` : ''}
+                        </div>
+                    </li>
+                `;
+            });
+
+            document.getElementById('res-root-cause').innerText = primary.rootCause;
+            document.getElementById('res-partner').innerText = primary.idealPartner;
+            
+            // 建议模块的动态颜色和边框
+            const adviceWrapper = document.getElementById('res-advice-wrapper');
+            adviceWrapper.className = `rounded-3xl p-6 shadow-sm border bg-white bg-opacity-70 ${primary.borderColor}`;
+            document.getElementById('res-advice-title').className = `text-lg font-bold flex items-center gap-2 mb-3 ${primary.themeColor}`;
+            document.getElementById('res-advice').innerText = primary.advice;
+
+            // 复合依恋显示逻辑
+            const secondaryAlert = document.getElementById('res-secondary-alert');
+            const secondaryBadge = document.getElementById('res-secondary-wrapper');
+            
+            if (sType) {
+                const secondary = resultDetails[sType];
+                document.getElementById('res-secondary-text').innerText = `复合倾向：偏向 ${secondary.title}`;
+                document.getElementById('res-alert-name').innerText = secondary.title;
+                secondaryBadge.classList.remove('hidden');
+                secondaryAlert.classList.remove('hidden');
+                secondaryAlert.classList.add('block');
+            } else {
+                secondaryBadge.classList.add('hidden');
+                secondaryAlert.classList.add('hidden');
+                secondaryAlert.classList.remove('block');
+            }
+        }
+
+        // 重新开始
+        function resetApp() {
+            switchView('view-intro');
+        }
+
+    </script>
+</body>
+</html>
