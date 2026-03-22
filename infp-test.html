@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>INFP恋爱依恋深度测评</title>
+<style>
+body{font-family:Arial;max-width:700px;margin:auto;padding:20px;background:#f6f6f6;}
+.box{background:#fff;padding:20px;border-radius:12px;margin-top:20px;}
+button{width:100%;padding:12px;margin:6px 0;background:#ff6b81;color:#fff;border:none;border-radius:8px;}
+input{width:100%;padding:10px;margin-top:10px;}
+</style>
+</head>
+
+<body>
+
+<div class="box" id="auth">
+<h2>请输入访问码</h2>
+<input id="code">
+<button onclick="check()">进入测评</button>
+</div>
+
+<div class="box" id="quiz" style="display:none;"></div>
+<div class="box" id="loading" style="display:none;text-align:center;"></div>
+<div class="box" id="result" style="display:none;"></div>
+
+<script>
+function check(){
+ if(document.getElementById("code").value=="6688"){
+   document.getElementById("auth").style.display="none";
+   showQ();
+ }else alert("验证码错误");
+}
+
+const qs=[
+{q:"对方回消息慢，你会？",a:[["很焦虑","A"],["有点在意","R"],["能理解","F"],["不在意","S"]]},
+{q:"对方冷淡你会？",a:[["怀疑不爱","A"],["默默猜测","R"],["有点失落","F"],["相信对方","S"]]},
+{q:"你在感情更像？",a:[["讨好型","A"],["忽冷忽热","R"],["温柔包容","F"],["稳定成熟","S"]]},
+{q:"被忽略时你会？",a:[["自我否定","A"],["假装没事","R"],["安静等待","F"],["直接沟通","S"]]},
+{q:"你是否敏感？",a:[["非常","A"],["有一点","R"],["轻微","F"],["几乎不","S"]]},
+{q:"你害怕？",a:[["被抛弃","A"],["被束缚","R"],["不被理解","F"],["没什么","S"]]},
+{q:"你在感情会？",a:[["失去自我","A"],["保持距离","R"],["温柔投入","F"],["平衡关系","S"]]}
+];
+
+let i=0;
+let count={A:0,R:0,F:0,S:0};
+
+function showQ(){
+ if(i>=qs.length){loading();return;}
+ let q=qs[i];
+ let html=`<h3>${i+1}. ${q.q}</h3>`;
+ q.a.forEach(ans=>{
+   html+=`<button onclick="ans('${ans[1]}')">${ans[0]}</button>`;
+ });
+ document.getElementById("quiz").innerHTML=html;
+ document.getElementById("quiz").style.display="block";
+}
+
+function ans(v){
+ count[v]++;
+ i++;
+ showQ();
+}
+
+function loading(){
+ document.getElementById("quiz").style.display="none";
+ document.getElementById("loading").style.display="block";
+ let p=0;
+ let t=setInterval(()=>{
+   p+=10;
+   document.getElementById("loading").innerHTML="正在分析你的依恋人格..."+p+"%";
+   if(p>=100){clearInterval(t);result();}
+ },300);
+}
+
+function result(){
+ document.getElementById("loading").style.display="none";
+ document.getElementById("result").style.display="block";
+
+ let max=Object.keys(count).reduce((a,b)=>count[a]>count[b]?a:b);
+
+ let title="",content="";
+
+ if(max=="A"){
+ title="焦虑依恋型";
+ content="你在感情中极度敏感、害怕失去，容易过度付出和讨好，对方的一点变化都会影响你的情绪。你需要安全感，但往往越在意越容易失去平衡。建议：建立自我价值感，减少依赖。";
+}
+if(max=="R"){
+ title="回避依恋型";
+ content="你渴望爱但又害怕亲密，容易在关系中保持距离，甚至逃避情感。你不是不爱，而是太怕受伤。建议：学会表达和接纳情感。";
+}
+if(max=="F"){
+ title="温柔安全型";
+ content="你温柔、共情力强，既能爱别人也能照顾自己，是非常理想的恋爱状态。你适合细水长流的关系。";
+}
+if(max=="S"){
+ title="稳定治愈型";
+ content="你内心稳定，情绪成熟，是高阶依恋人格。你不依赖关系但能很好经营关系，是非常稀缺的类型。";
+}
+
+ document.getElementById("result").innerHTML=`
+ <h2>你的依恋人格结果</h2>
+ <p><b>类型：</b>${title}</p>
+
+ <h3>🧠 核心分析</h3>
+ <p>${content}</p>
+
+ <h3>📊 深层机制</h3>
+ <p>你的依恋模式往往源于成长经历与情感需求模式，会影响你在亲密关系中的行为方式。</p>
+
+ <h3>💡 建议</h3>
+ <p>提升自我认知与安全感，是改善关系的关键。</p>
+ `;
+}
+</script>
+
+</body>
+</html>
