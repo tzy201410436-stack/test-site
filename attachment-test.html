@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>依恋人格深度测评</title>
+<style>
+body{font-family:Arial;max-width:600px;margin:auto;padding:20px;background:#f7f7f7;}
+h1{text-align:center;}
+button{width:100%;padding:12px;margin:8px 0;background:#6a5acd;color:#fff;border:none;border-radius:8px;}
+input{width:100%;padding:10px;margin-top:10px;}
+.box{background:#fff;padding:20px;border-radius:12px;margin-top:20px;}
+</style>
+</head>
+
+<body>
+
+<div id="auth" class="box">
+<h2>请输入访问码</h2>
+<input id="code">
+<button onclick="check()">进入测评</button>
+</div>
+
+<div id="quiz" class="box" style="display:none;"></div>
+<div id="loading" class="box" style="display:none;text-align:center;"></div>
+<div id="result" class="box" style="display:none;"></div>
+
+<script>
+function check(){
+ if(document.getElementById("code").value=="6688"){
+   document.getElementById("auth").style.display="none";
+   showQ();
+ }else alert("验证码错误");
+}
+
+const qs=[
+{q:"你在关系中最害怕的是？",a:[["被忽视",2],["失去自由",1],["被抛弃",3],["没有特别担心",0]]},
+{q:"当对方冷淡时你会？",a:[["焦虑追问",3],["观察但克制",1],["疏远自己",2],["正常相处",0]]},
+{q:"你更倾向？",a:[["依赖对方",3],["保持距离",2],["平衡关系",0],["不确定",1]]},
+{q:"亲密关系中你更像？",a:[["粘人",3],["独立",2],["稳定",0],["摇摆",1]]},
+{q:"对未来关系你？",a:[["很焦虑",3],["有点担心",1],["顺其自然",0],["逃避思考",2]]},
+{q:"你是否容易吃醋？",a:[["很容易",3],["偶尔",1],["很少",0],["压抑情绪",2]]}
+];
+
+let i=0,score=0;
+
+function showQ(){
+ if(i>=qs.length){loading();return;}
+ let q=qs[i];
+ let html=`<h3>${i+1}. ${q.q}</h3>`;
+ q.a.forEach(ans=>{
+   html+=`<button onclick="ans(${ans[1]})">${ans[0]}</button>`;
+ });
+ document.getElementById("quiz").innerHTML=html;
+ document.getElementById("quiz").style.display="block";
+}
+
+function ans(v){
+ score+=v;
+ i++;
+ showQ();
+}
+
+function loading(){
+ document.getElementById("quiz").style.display="none";
+ document.getElementById("loading").style.display="block";
+ let p=0;
+ let t=setInterval(()=>{
+   p+=10;
+   document.getElementById("loading").innerHTML="正在分析你的依恋模式..."+p+"%";
+   if(p>=100){clearInterval(t);result();}
+ },300);
+}
+
+function result(){
+ document.getElementById("loading").style.display="none";
+ document.getElementById("result").style.display="block";
+
+ let type="",desc="";
+ if(score<=5){
+   type="安全型依恋";
+   desc="你在关系中具有稳定的安全感...";
+ }else if(score<=10){
+   type="回避型依恋";
+   desc="你倾向保持距离，避免过度亲密...";
+ }else if(score<=15){
+   type="焦虑型依恋";
+   desc="你对关系较敏感，容易担心失去...";
+ }else{
+   type="混乱型依恋";
+   desc="你在亲密关系中呈现矛盾状态...";
+ }
+
+ document.getElementById("result").innerHTML=`
+ <h2>你的依恋人格报告</h2>
+ <p><b>人格类型：</b>${type}</p>
+
+ <h3>🧠 核心特征</h3>
+ <p>${desc} 你的行为模式与早期关系经验密切相关。</p>
+
+ <h3>📊 情感表现</h3>
+ <p>你在亲密关系中的反应具有明显模式，包括情绪波动与依赖方式。</p>
+
+ <h3>⚠️ 潜在问题</h3>
+ <p>如果不调整，可能影响长期关系稳定性。</p>
+
+ <h3>💡 改善建议</h3>
+ <p>提升自我认知与情绪调节能力，有助于建立健康关系。</p>
+
+ <h3>📌 深度结论</h3>
+ <p>你的依恋模式决定了你在爱情中的行为逻辑。</p>
+ `;
+}
+</script>
+
+</body>
+</html>
