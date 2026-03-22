@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>恋爱控制欲测评</title>
+<style>
+body {
+  font-family: Arial;
+  max-width: 600px;
+  margin: auto;
+  padding: 20px;
+}
+h1 { text-align: center; }
+.question { margin: 20px 0; }
+button {
+  display: block;
+  margin: 10px 0;
+  padding: 10px;
+  width: 100%;
+  border: none;
+  background: #ff4d6d;
+  color: white;
+  border-radius: 8px;
+  font-size: 16px;
+}
+.result {
+  display: none;
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>恋爱控制欲测评</h1>
+<div id="quiz"></div>
+
+<div class="result" id="result"></div>
+
+<script>
+const questions = [
+  {q:"对方没有秒回你消息，你会？", a:[["有点不舒服",2],["无所谓",0]]},
+  {q:"你会查看对方社交动态吗？", a:[["经常",2],["很少",0]]},
+  {q:"对方和异性聊天你会？", a:[["会在意",2],["不太在意",0]]},
+  {q:"你希望对方随时报备行踪吗？", a:[["是",2],["不需要",0]]},
+  {q:"对方临时取消约会你会？", a:[["生气",2],["能理解",0]]},
+  {q:"你会翻对方手机吗？", a:[["会",3],["不会",0]]},
+  {q:"你希望对方以你为中心吗？", a:[["是",2],["不是",0]]},
+  {q:"你会限制对方社交吗？", a:[["会",3],["不会",0]]},
+  {q:"对方晚回消息你会脑补吗？", a:[["会",2],["不会",0]]},
+  {q:"你更偏向？", a:[["占有",2],["自由",0]]}
+];
+
+let current = 0;
+let score = 0;
+
+function showQuestion() {
+  if(current >= questions.length){
+    showResult();
+    return;
+  }
+
+  let q = questions[current];
+  let html = `<div class="question"><h3>${current+1}. ${q.q}</h3>`;
+  
+  q.a.forEach(ans=>{
+    html += `<button onclick="answer(${ans[1]})">${ans[0]}</button>`;
+  });
+
+  html += `</div>`;
+  document.getElementById("quiz").innerHTML = html;
+}
+
+function answer(val){
+  score += val;
+  current++;
+  showQuestion();
+}
+
+function showResult(){
+  document.getElementById("quiz").style.display = "none";
+  let text = "";
+
+  if(score <= 5){
+    text = "🟢 低控制欲：你在关系中更注重自由与信任。";
+  }else if(score <= 12){
+    text = "🟡 中等控制欲：你在意对方，同时也懂得克制。";
+  }else if(score <= 18){
+    text = "🟠 较强控制欲：你容易因为在乎而产生控制欲。";
+  }else{
+    text = "🔴 高控制欲：你对关系的掌控欲较强，容易焦虑与占有。";
+  }
+
+  document.getElementById("result").style.display = "block";
+  document.getElementById("result").innerHTML = `
+    <h2>你的测试结果</h2>
+    <p>${text}</p>
+    <p style="margin-top:20px;">💡 建议：学会建立边界感，健康关系更长久。</p>
+  `;
+}
+
+showQuestion();
+</script>
+
+</body>
+</html>
